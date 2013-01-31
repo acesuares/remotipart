@@ -20,6 +20,16 @@
           settings.iframe      = true;
           settings.files       = $($.rails.fileInputSelector, form);
           settings.data        = form.serializeArray();
+          
+          // jQuery 1.9 serializeArray() contains input:file entries
+          // so exclude them from settings.data, otherwise files will not be sent
+          // https://github.com/907th/remotipart/blob/b0a21ac5aa377880ced01261e1207a45a30c99a2/vendor/assets/javascripts/jquery.remotipart.js
+          settings.files.each(function(i, file){
+            for (var j = settings.data.length - 1; j >= 0; j--)
+              if (settings.data[j].name == file.name)
+                settings.data.splice(j, 1);
+          })
+          
           settings.processData = false;
 
           // Modify some settings to integrate JS request with rails helpers and middleware
@@ -51,7 +61,8 @@
     }
   };
 
-  $('form').live('ajax:aborted:file', function(){
+  // https://github.com/907th/remotipart/blob/b0a21ac5aa377880ced01261e1207a45a30c99a2/vendor/assets/javascripts/jquery.remotipart.js
+  $('form').on('ajax:aborted:file', function(){
     var form = $(this);
 
     remotipart.setup(form);
